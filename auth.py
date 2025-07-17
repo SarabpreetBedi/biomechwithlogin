@@ -29,40 +29,19 @@ def login():
     pwd = st.text_input("Password", type="password", key="login_pwd")
     if st.button("Login"):
         try:
-            res = supabase.auth.sign_in_with_password({"email": email, "password": pwd})
-            # If email auth is disabled, Supabase will return an error
-            if hasattr(res, "error") and res.error and "Email logins are disabled" in res.error.get("message", ""):
-                st.error("❌ Email authentication is disabled. Please use another login method.")
-                return
-            if res.user and res.session:
-                try:
-                    profile_result = supabase.table("profiles").select("is_admin").eq("id", res.user.id).execute()
-                    if profile_result.data:
-                        st.session_state.profile = profile_result.data[0]
-                    else:
-                        profile_data = {"id": res.user.id, "is_admin": is_admin(res.user.email)}
-                        supabase.table("profiles").insert(profile_data).execute()
-                        st.session_state.profile = profile_data
-                except Exception:
-                    try:
-                        profile_data = {"id": res.user.id, "is_admin": is_admin(res.user.email)}
-                        supabase.table("profiles").insert(profile_data).execute()
-                        st.session_state.profile = profile_data
-                    except Exception:
-                        st.session_state.profile = {"is_admin": False}
-                        return
-                st.session_state.user = res.user
-                st.session_state.session = res.session
-                st.session_state.user_email = res.user.email
+            # Query the profiles table for a matching email and password
+            result = supabase.table("profiles").select("id, email, is_admin").eq("email", email).eq("password", pwd).execute()
+            if result.data and len(result.data) > 0:
+                user_profile = result.data[0]
+                st.session_state.user = user_profile["id"]
+                st.session_state.user_email = user_profile["email"]
+                st.session_state.profile = {"is_admin": user_profile.get("is_admin", False)}
                 st.success("✅ Logged in")
                 st.rerun()
             else:
                 st.error("❌ Login failed. Please check your credentials.")
         except Exception as e:
-            if "Email logins are disabled" in str(e):
-                st.error("❌ Email authentication is disabled. Please use another login method.")
-            else:
-                st.error("❌ Login failed. Please check your credentials.")
+            st.error(f"❌ Login error: {e}")
 
 def signup():
     st.subheader("Create Account")
@@ -70,25 +49,19 @@ def signup():
     pwd = st.text_input("Password", type="password", key="su_pwd")
     if st.button("Sign Up"):
         try:
-            res = supabase.auth.sign_up({"email": email, "password": pwd})
-            # If email auth is disabled, Supabase will return an error
-            if hasattr(res, "error") and res.error and "Email signups are disabled" in res.error.get("message", ""):
-                st.error("❌ Email sign-up is disabled. Please use another sign-up method.")
+            # Check if email already exists
+            existing = supabase.table("profiles").select("id").eq("email", email).execute()
+            if existing.data and len(existing.data) > 0:
+                st.error("❌ Email already registered. Please log in or use another email.")
                 return
-            if res.user:
-                try:
-                    profile_data = {"id": res.user.id, "is_admin": is_admin(res.user.email)}
-                    supabase.table("profiles").insert(profile_data).execute()
-                    st.success("✅ Account and profile created successfully! You can now log in.")
-                except Exception:
-                    st.warning("Account created, but could not create profile. You can still log in.")
-            else:
-                st.error("❌ Sign-up error. Please try again.")
+            # Insert new profile with email and password
+            import uuid
+            user_id = str(uuid.uuid4())
+            profile_data = {"id": user_id, "email": email, "password": pwd, "is_admin": is_admin(email)}
+            supabase.table("profiles").insert(profile_data).execute()
+            st.success("✅ Account created successfully! You can now log in.")
         except Exception as e:
-            if "Email signups are disabled" in str(e):
-                st.error("❌ Email sign-up is disabled. Please use another sign-up method.")
-            else:
-                st.error("❌ Sign-up error. Please try again.")
+            st.error(f"❌ Sign-up error: {e}")
 
 def auth_screen():
     st.title("Login Page")
@@ -111,6 +84,7 @@ def main():
 
 if __name__ == "__main__":
     main()
+
 
 
 

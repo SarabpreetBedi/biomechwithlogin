@@ -68,7 +68,15 @@ def signup():
         try:
             res = supabase.auth.sign_up({"email": email, "password": pwd})
             if res.user:
-                st.success("✅ Account created successfully! You can now log in.")
+                # Immediately create profile row after signup
+                try:
+                    profile_data = {"id": res.user.id, "is_admin": is_admin(res.user.email)}
+                    supabase.table("profiles").insert(profile_data).execute()
+                    st.success("✅ Account and profile created successfully! You can now log in.")
+                except Exception as profile_error:
+                    st.warning("Account created, but could not create profile.")
+                    st.error(f"Profile error: {profile_error}")
+                    st.info("You can still log in, but profile info may be missing.")
             else:
                 st.error("❌ Sign-up error")
         except Exception as e:
@@ -95,5 +103,6 @@ def main():
 
 if __name__ == "__main__":
     main()
+
 
 

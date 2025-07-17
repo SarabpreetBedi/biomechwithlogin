@@ -2,13 +2,13 @@ import streamlit as st
 from supabase import create_client, Client
 import os
 
-# Only use st.secrets for configuration
-SUPABASE_URL = st.secrets["SUPABASE_URL"]
-SUPABASE_KEY = st.secrets.get("SUPABASE_SERVICE_ROLE_KEY")
-if not SUPABASE_KEY:
-    st.error("SUPABASE_SERVICE_ROLE_KEY is missing from your secrets! Please add it to .streamlit/secrets.toml or Streamlit Cloud secrets.")
-    raise RuntimeError("SUPABASE_SERVICE_ROLE_KEY is missing from your secrets!")
-supabase = create_client(SUPABASE_URL, SUPABASE_KEY)
+@st.cache_resource
+def get_supabase_client():
+    SUPABASE_URL = st.secrets["SUPABASE_URL"]
+    SUPABASE_KEY = st.secrets.get("SUPABASE_SERVICE_ROLE_KEY")
+    return create_client(SUPABASE_URL, SUPABASE_KEY)
+
+supabase = get_supabase_client()
 
 # Add this at the top of the file
 try:
@@ -84,6 +84,8 @@ def main():
 
 if __name__ == "__main__":
     main()
+
+
 
 
 

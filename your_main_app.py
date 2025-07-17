@@ -182,8 +182,12 @@ def main_app(user_email):
         player_query = supabase.table("players").select("id", "name")
         if not admin_mode:
             player_query = player_query.eq("user_email", user_email)
-        player_res = player_query.execute()
-        player_df = pd.DataFrame(player_res.data) if player_res.data else pd.DataFrame()
+        try:
+            player_res = player_query.execute()
+            player_df = pd.DataFrame(player_res.data) if player_res.data else pd.DataFrame()
+        except Exception as e:
+            st.error(f"Could not load player data. Please try again later.\nError: {e}")
+            player_df = pd.DataFrame()
 
         if player_df.empty:
             st.warning("No players found for your account." if not admin_mode else "No players found.")
@@ -194,8 +198,12 @@ def main_app(user_email):
             session_query = supabase.table("sessions").select("*").eq("player_id", player_id)
             if not admin_mode:
                 session_query = session_query.eq("user_email", user_email)
-            session_res = session_query.execute()
-            session_df = pd.DataFrame(session_res.data) if session_res.data else pd.DataFrame()
+            try:
+                session_res = session_query.execute()
+                session_df = pd.DataFrame(session_res.data) if session_res.data else pd.DataFrame()
+            except Exception as e:
+                st.error(f"Could not load session data. Please try again later.\nError: {e}")
+                session_df = pd.DataFrame()
             if session_df.empty:
                 st.warning("No sessions found for this player.")
             else:
@@ -270,8 +278,13 @@ def main_app(user_email):
         player_query = supabase.table("players").select("id", "name")
         if not admin_mode:
             player_query = player_query.eq("user_email", user_email)
-        player_res = player_query.execute()
-        player_df = pd.DataFrame(player_res.data) if player_res.data else pd.DataFrame()
+        try:
+            player_res = player_query.execute()
+            player_df = pd.DataFrame(player_res.data) if player_res.data else pd.DataFrame()
+        except Exception as e:
+            st.error(f"Could not load player data. Please try again later.\nError: {e}")
+            player_df = pd.DataFrame()
+
         if player_df.empty:
             st.warning("No players found for your account.")
         else:
@@ -425,8 +438,12 @@ def main_app(user_email):
             st.subheader("Delete a Session")
             # Get all players for this user
             player_query = supabase.table("players").select("id", "name").eq("user_email", user_email)
-            player_res = player_query.execute()
-            player_df = pd.DataFrame(player_res.data) if player_res.data else pd.DataFrame()
+            try:
+                player_res = player_query.execute()
+                player_df = pd.DataFrame(player_res.data) if player_res.data else pd.DataFrame()
+            except Exception as e:
+                st.error(f"Could not load player data for deletion. Please try again later.\nError: {e}")
+                player_df = pd.DataFrame()
             selected_player_id = None
             selected_session_id = None
             session_df = pd.DataFrame()
@@ -435,7 +452,10 @@ def main_app(user_email):
                 selected_player_id = int(player_df[player_df["name"] == player_name]["id"].values[0])
                 # Get sessions for this player (only user's sessions)
                 session_res = supabase.table("sessions").select("id", "date", "session_name").eq("player_id", selected_player_id).eq("user_email", user_email).execute()
-                session_df = pd.DataFrame(session_res.data) if session_res.data else pd.DataFrame()
+                try:
+                    session_df = pd.DataFrame(session_res.data) if session_res.data else pd.DataFrame()
+                except Exception as e:
+                    st.error(f"Could not load session data for deletion. Please try again later.\nError: {e}")
                 if not session_df.empty:
                     session_df["label"] = session_df["date"] + " - " + session_df["session_name"]
                     session_label = st.selectbox("Select a session to delete", session_df["label"], key="user_admin_session_select")
@@ -464,12 +484,20 @@ def main_app(user_email):
             show_raw = st.checkbox("Show Raw Database (Players + Sessions)")
             if show_raw:
                 st.markdown("**Players Table**")
-                player_all_res = supabase.table("players").select("*").eq("user_email", user_email).execute()
-                player_all_df = pd.DataFrame(player_all_res.data) if player_all_res.data else pd.DataFrame()
+                try:
+                    player_all_res = supabase.table("players").select("*").eq("user_email", user_email).execute()
+                    player_all_df = pd.DataFrame(player_all_res.data) if player_all_res.data else pd.DataFrame()
+                except Exception as e:
+                    st.error(f"Could not load player data for raw database. Please try again later.\nError: {e}")
+                    player_all_df = pd.DataFrame()
                 st.dataframe(player_all_df, height=300, use_container_width=True)
                 st.markdown("**Sessions Table**")
-                session_all_res = supabase.table("sessions").select("*").eq("user_email", user_email).execute()
-                session_all_df = pd.DataFrame(session_all_res.data) if session_all_res.data else pd.DataFrame()
+                try:
+                    session_all_res = supabase.table("sessions").select("*").eq("user_email", user_email).execute()
+                    session_all_df = pd.DataFrame(session_all_res.data) if session_all_res.data else pd.DataFrame()
+                except Exception as e:
+                    st.error(f"Could not load session data for raw database. Please try again later.\nError: {e}")
+                    session_all_df = pd.DataFrame()
                 st.dataframe(session_all_df, height=300, use_container_width=True)
             return
         st.header("Admin Tools")
@@ -480,8 +508,12 @@ def main_app(user_email):
         player_query = supabase.table("players").select("id", "name")
         if not admin_mode:
             player_query = player_query.eq("user_email", user_email)
-        player_res = player_query.execute()
-        player_df = pd.DataFrame(player_res.data) if player_res.data else pd.DataFrame()
+        try:
+            player_res = player_query.execute()
+            player_df = pd.DataFrame(player_res.data) if player_res.data else pd.DataFrame()
+        except Exception as e:
+            st.error(f"Could not load player data for deletion. Please try again later.\nError: {e}")
+            player_df = pd.DataFrame()
         selected_player_id = None
         selected_session_id = None
         session_df = pd.DataFrame()
@@ -490,7 +522,10 @@ def main_app(user_email):
             selected_player_id = int(player_df[player_df["name"] == player_name]["id"].values[0])
             # Get sessions for this player
             session_res = supabase.table("sessions").select("id", "date", "session_name").eq("player_id", selected_player_id).execute()
-            session_df = pd.DataFrame(session_res.data) if session_res.data else pd.DataFrame()
+            try:
+                session_df = pd.DataFrame(session_res.data) if session_res.data else pd.DataFrame()
+            except Exception as e:
+                st.error(f"Could not load session data for deletion. Please try again later.\nError: {e}")
             if not session_df.empty:
                 session_df["label"] = session_df["date"] + " - " + session_df["session_name"]
                 session_label = st.selectbox("Select a session to delete", session_df["label"], key="admin_session_select")
@@ -551,17 +586,36 @@ def main_app(user_email):
             st.markdown("**Players Table**")
             # Fetch all player fields
             if admin_mode:
-                player_all_res = supabase.table("players").select("*").execute()
+                try:
+                    player_all_res = supabase.table("players").select("*").execute()
+                    player_all_df = pd.DataFrame(player_all_res.data) if player_all_res.data else pd.DataFrame()
+                except Exception as e:
+                    st.error(f"Could not load player data for raw database. Please try again later.\nError: {e}")
+                    player_all_df = pd.DataFrame()
             else:
-                player_all_res = supabase.table("players").select("*").eq("user_email", user_email).execute()
-            player_all_df = pd.DataFrame(player_all_res.data) if player_all_res.data else pd.DataFrame()
+                try:
+                    player_all_res = supabase.table("players").select("*").eq("user_email", user_email).execute()
+                    player_all_df = pd.DataFrame(player_all_res.data) if player_all_res.data else pd.DataFrame()
+                except Exception as e:
+                    st.error(f"Could not load player data for raw database. Please try again later.\nError: {e}")
+                    player_all_df = pd.DataFrame()
             # Set height for vertical scroll, use_container_width for horizontal scroll
             st.dataframe(player_all_df, height=300, use_container_width=True)
             # Show sessions
             if admin_mode:
-                session_all_res = supabase.table("sessions").select("*").execute()
+                try:
+                    session_all_res = supabase.table("sessions").select("*").execute()
+                    session_all_df = pd.DataFrame(session_all_res.data) if session_all_res.data else pd.DataFrame()
+                except Exception as e:
+                    st.error(f"Could not load session data for raw database. Please try again later.\nError: {e}")
+                    session_all_df = pd.DataFrame()
             else:
-                session_all_res = supabase.table("sessions").select("*").eq("user_email", user_email).execute()
-            session_all_df = pd.DataFrame(session_all_res.data) if session_all_res.data else pd.DataFrame()
+                try:
+                    session_all_res = supabase.table("sessions").select("*").eq("user_email", user_email).execute()
+                    session_all_df = pd.DataFrame(session_all_res.data) if session_all_res.data else pd.DataFrame()
+                except Exception as e:
+                    st.error(f"Could not load session data for raw database. Please try again later.\nError: {e}")
+                    session_all_df = pd.DataFrame()
             st.markdown("**Sessions Table**")
             st.dataframe(session_all_df, height=300, use_container_width=True)
+

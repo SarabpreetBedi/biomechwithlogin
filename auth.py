@@ -30,6 +30,10 @@ def login():
     if st.button("Login"):
         try:
             res = supabase.auth.sign_in_with_password({"email": email, "password": pwd})
+            # If email auth is disabled, Supabase will return an error
+            if hasattr(res, "error") and res.error and "Email logins are disabled" in res.error.get("message", ""):
+                st.error("❌ Email authentication is disabled. Please use another login method.")
+                return
             if res.user and res.session:
                 try:
                     profile_result = supabase.table("profiles").select("is_admin").eq("id", res.user.id).execute()
@@ -39,7 +43,7 @@ def login():
                         profile_data = {"id": res.user.id, "is_admin": is_admin(res.user.email)}
                         supabase.table("profiles").insert(profile_data).execute()
                         st.session_state.profile = profile_data
-                except Exception as profile_error:
+                except Exception:
                     try:
                         profile_data = {"id": res.user.id, "is_admin": is_admin(res.user.email)}
                         supabase.table("profiles").insert(profile_data).execute()
@@ -56,7 +60,7 @@ def login():
                 st.error("❌ Login failed. Please check your credentials.")
         except Exception as e:
             if "Email logins are disabled" in str(e):
-                st.error("❌ Login failed. Please contact support or try another login method.")
+                st.error("❌ Email authentication is disabled. Please use another login method.")
             else:
                 st.error("❌ Login failed. Please check your credentials.")
 
@@ -67,6 +71,10 @@ def signup():
     if st.button("Sign Up"):
         try:
             res = supabase.auth.sign_up({"email": email, "password": pwd})
+            # If email auth is disabled, Supabase will return an error
+            if hasattr(res, "error") and res.error and "Email signups are disabled" in res.error.get("message", ""):
+                st.error("❌ Email sign-up is disabled. Please use another sign-up method.")
+                return
             if res.user:
                 try:
                     profile_data = {"id": res.user.id, "is_admin": is_admin(res.user.email)}
@@ -76,8 +84,11 @@ def signup():
                     st.warning("Account created, but could not create profile. You can still log in.")
             else:
                 st.error("❌ Sign-up error. Please try again.")
-        except Exception:
-            st.error("❌ Sign-up error. Please try again.")
+        except Exception as e:
+            if "Email signups are disabled" in str(e):
+                st.error("❌ Email sign-up is disabled. Please use another sign-up method.")
+            else:
+                st.error("❌ Sign-up error. Please try again.")
 
 def auth_screen():
     st.title("Login Page")
@@ -100,6 +111,8 @@ def main():
 
 if __name__ == "__main__":
     main()
+
+
 
 
 

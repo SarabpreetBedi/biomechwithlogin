@@ -14,7 +14,7 @@ supabase = get_supabase_client()
 try:
     from your_main_app import is_admin
 except ImportError:
-    ADMIN_EMAILS = st.secrets.get("ADMIN_EMAILS", [])
+    ADMIN_EMAILS = st.secrets.get("ADMIN_EMAILS", ["b_sarabpreet@yahoo.com","mmueller4@rogers.com"])
     def is_admin(email):
         return email in ADMIN_EMAILS
 
@@ -57,7 +57,8 @@ def signup():
             # Insert new profile with email and password
             import uuid
             user_id = str(uuid.uuid4())
-            profile_data = {"id": user_id, "email": email, "password": pwd, "is_admin": is_admin(email)}
+            is_admin_value = is_admin(email)
+            profile_data = {"id": user_id, "email": email, "password": pwd, "is_admin": is_admin_value}
             supabase.table("profiles").insert(profile_data).execute()
             st.success("✅ Account created successfully! You can now log in.")
         except Exception as e:

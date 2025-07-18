@@ -13,7 +13,7 @@ supabase = get_supabase_client()
 # Add this at the top of the file
 # Always get ADMIN_EMAILS as a list, even if provided as a comma-separated string in secrets
 def get_admin_emails():
-    emails = st.secrets.get("ADMIN_EMAILS", ["b_sarabpreet@yahoo.com", "mmueller4@rogers.com"])
+    emails = st.secrets.get("ADMIN_EMAILS", ["mmueller4@rogers.com"])
     if isinstance(emails, str):
         # Support comma-separated string
         emails = [e.strip() for e in emails.split(",") if e.strip()]

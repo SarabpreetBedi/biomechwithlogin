@@ -11,12 +11,17 @@ def get_supabase_client():
 supabase = get_supabase_client()
 
 # Add this at the top of the file
-try:
-    from your_main_app import is_admin
-except ImportError:
-    ADMIN_EMAILS = st.secrets.get("ADMIN_EMAILS", ["mmueller4@rogers.com"])
-    def is_admin(email):
-        return email in ADMIN_EMAILS
+# Always get ADMIN_EMAILS as a list, even if provided as a comma-separated string in secrets
+def get_admin_emails():
+    emails = st.secrets.get("ADMIN_EMAILS", ["b_sarabpreet@yahoo.com", "mmueller4@rogers.com"])
+    if isinstance(emails, str):
+        # Support comma-separated string
+        emails = [e.strip() for e in emails.split(",") if e.strip()]
+    return emails
+ADMIN_EMAILS = get_admin_emails()
+
+def is_admin(email):
+    return email in ADMIN_EMAILS
 
 if 'user' not in st.session_state:
     st.session_state.user = None
@@ -33,6 +38,10 @@ def login():
             result = supabase.table("profiles").select("id, email, is_admin").eq("email", email).eq("password", pwd).execute()
             if result.data and len(result.data) > 0:
                 user_profile = result.data[0]
+                # If email is in ADMIN_EMAILS but is_admin is not True, update the profile
+                if is_admin(email) and not user_profile.get("is_admin", False):
+                    supabase.table("profiles").update({"is_admin": True}).eq("id", user_profile["id"]).execute()
+                    user_profile["is_admin"] = True
                 st.session_state.user = user_profile["id"]
                 st.session_state.user_email = user_profile["email"]
                 st.session_state.profile = {"is_admin": user_profile.get("is_admin", False)}
@@ -85,4 +94,3 @@ def main():
 
 if __name__ == "__main__":
     main()
-

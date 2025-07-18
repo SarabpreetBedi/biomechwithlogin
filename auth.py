@@ -14,7 +14,7 @@ supabase = get_supabase_client()
 try:
     from your_main_app import is_admin
 except ImportError:
-    ADMIN_EMAILS = st.secrets.get("ADMIN_EMAILS", ["b_sarabpreet@yahoo.com","mmueller4@rogers.com"])
+    ADMIN_EMAILS = st.secrets.get("ADMIN_EMAILS", ["mmueller4@rogers.com"])
     def is_admin(email):
         return email in ADMIN_EMAILS
 

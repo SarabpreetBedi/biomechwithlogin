@@ -7,7 +7,6 @@ import os
 import io
 import requests
 import time
-from auth import sign_out
 from supabase import create_client, Client
 
 @st.cache_resource

@@ -122,5 +122,3 @@ This project is a web application for tracking and analyzing pitcher biomechanic
 - **Permission errors:** Only admins can access all data. Regular users can only manage their own.
 
 ---
-
-For further help, check the code in `auth.py`, `your_main_app.py`, and `app.py` or contact the project maintainer. 
